@@ -352,22 +352,6 @@ function Index() {
       }),
   });
 
-  const user = useQuery<AxiosResponse<UserValues>>({
-    queryKey: ["user"],
-    queryFn: () => api.get("users/get_user"),
-    onError: (err) => {
-      console.log(err);
-      navigate({
-        to: "/",
-      });
-      toast({
-        title: "Выход",
-        description: "Войдите заново",
-        variant: "destructive",
-      });
-    },
-  });
-
   const filterType = useForm<z.infer<typeof FilterTypeSchema>>({
     resolver: zodResolver(FilterTypeSchema),
     defaultValues: {
@@ -648,7 +632,34 @@ function Index() {
       sorting,
     },
   });
-
+  const user = useQuery<AxiosResponse<UserValues>>({
+    queryKey: ["user"],
+    queryFn: () => api.get("users/get_user"),
+    onSuccess: (user) => {
+      const isTherapist = user.data.role === "therapist";
+      table.setColumnVisibility({
+        full_name: isTherapist,
+        birthday: isTherapist,
+        age: isTherapist,
+        living_place: isTherapist,
+        first_visit: isTherapist,
+        last_visit: isTherapist,
+        job_title: isTherapist,
+        inhabited_localit: isTherapist,
+      });
+    },
+    onError: (err) => {
+      console.log(err);
+      navigate({
+        to: "/",
+      });
+      toast({
+        title: "Выход",
+        description: "Войдите заново",
+        variant: "destructive",
+      });
+    },
+  });
   useEffect(() => {
     const subscriptionConfig = filterConfig.watch(({ filter }) => {
       table.setGlobalFilter({
@@ -679,21 +690,25 @@ function Index() {
   }, [filterType.watch]);
 
   return (
-    <div className="p-6 h-screen flex gap-2">
+    <div className="p-6 h-screen sm:flex-row flex flex-col gap-2">
       <div className="flex flex-col justify-between">
         <div className="flex flex-col gap-2">
-          <DrawerDialogPatient update={patients.refetch} />
-          <Button
-            variant={"outline"}
-            onClick={() =>
-              table.setGlobalFilter({
-                type: "therapist",
-                value: user.data?.data.id,
-              })
-            }
-          >
-            Мои пациенты
-          </Button>
+          {user.data?.data.role === "therapist" && (
+            <>
+              <DrawerDialogPatient update={patients.refetch} />
+              <Button
+                variant={"outline"}
+                onClick={() =>
+                  table.setGlobalFilter({
+                    type: "therapist",
+                    value: user.data?.data.id,
+                  })
+                }
+              >
+                Мои пациенты
+              </Button>
+            </>
+          )}
           {user.data?.data.is_superuser && (
             <Sheet>
               <SheetTrigger asChild>
@@ -763,7 +778,7 @@ function Index() {
           >
             Добавить фильтр
           </Button>
-          <ScrollArea className="whitespace-nowrap h-[600px]">
+          <ScrollArea className="whitespace-nowrap sm:h-[600px]">
             <div className="my-5 flex flex-col gap-5">
               <Form {...filterConfig}>
                 {filterArray.fields?.map((field, index) => (
@@ -783,28 +798,36 @@ function Index() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="full_name">ФИО</SelectItem>
-                              <SelectItem value="gender">Пол</SelectItem>
-                              <SelectItem value="birthday">
-                                Дата рождения
-                              </SelectItem>
-                              <SelectItem value="age">Возраст</SelectItem>
-                              <SelectItem value="inhabited_localit">
-                                Населенный пункт
-                              </SelectItem>
+                              {user.data?.data.role === "therapist" && (
+                                <>
+                                  <SelectItem value="full_name">ФИО</SelectItem>
+                                  <SelectItem value="birthday">
+                                    Дата рождения
+                                  </SelectItem>
+                                  <SelectItem value="age">Возраст</SelectItem>
+                                  <SelectItem value="inhabited_localit">
+                                    Населенный пункт
+                                  </SelectItem>
 
-                              <SelectItem value="job_title">
-                                Должность
-                              </SelectItem>
-                              <SelectItem value="living_place">
-                                Место жительства
-                              </SelectItem>
-                              <SelectItem value="first_visit">
-                                Первый визит
-                              </SelectItem>
-                              <SelectItem value="last_visit">
-                                Последний визит
-                              </SelectItem>
+                                  <SelectItem value="job_title">
+                                    Должность
+                                  </SelectItem>
+                                  <SelectItem value="living_place">
+                                    Место жительства
+                                  </SelectItem>
+                                  <SelectItem value="first_visit">
+                                    Первый визит
+                                  </SelectItem>
+                                  <SelectItem value="last_visit">
+                                    Последний визит
+                                  </SelectItem>
+                                </>
+                              )}
+                              <SelectItem value="gender">Пол</SelectItem>
+
+                              <SelectItem value="treatment">Лечение</SelectItem>
+                              <SelectItem value="diagnosis">Диагноз</SelectItem>
+
                               <SelectItem value="bp">БП</SelectItem>
                               <SelectItem value="ischemia">Ишемия</SelectItem>
                               <SelectItem value="dep">ДЭП</SelectItem>
@@ -838,13 +861,16 @@ function Index() {
             <ScrollBar orientation="vertical" />
           </ScrollArea>
         </div>
-        <Button onClick={() => mutation.mutate()} variant={"ghost"}>
-          <DoorOpen />
-          Выйти
-        </Button>
+      
+         
+          <Button onClick={() => mutation.mutate()} variant={"ghost"}>
+            <DoorOpen />
+            Выйти
+          </Button>
+ 
       </div>
-      <div className="flex flex-col gap-2 mx-auto">
-        <div className="flex  gap-10">
+      <div className="mx-auto">
+        <div className="sm:flex-row flex flex-col gap-10 items-center">
           <DebouncedInput
             value={
               typeof table.getState().globalFilter?.value === "string"
@@ -857,7 +883,7 @@ function Index() {
             }
             setIsDebouncing={setIsFiltering}
           />
-          <div className="flex items-center gap-10">
+          <div className="sm:flex-row flex flex-col items-center gap-2">
             <div className="shadow px-2 flex items-center">
               <p className="border-r pr-4 mr-4 h-full">Пол</p>
               <ul>
@@ -960,7 +986,7 @@ function Index() {
 
         <DataTablePagination table={table} />
 
-        <div className="rounded-lg bg-white shadow">
+        <div className="rounded-lg bg-white shadow sm:overflow-none overflow-x-auto sm:w-full w-[300px] ">
           {!isFiltering && !patients.isLoading ? (
             <Table>
               <TableHeader>
@@ -1031,7 +1057,7 @@ function DebouncedInput({
   value: initialValue,
   onChange,
   setIsDebouncing,
-  debounce = 500,
+  debounce = 1000,
   ...props
 }: {
   value: string | number;
@@ -1158,7 +1184,7 @@ const ConditionField = ({
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Да или ж" />
+                    <SelectValue placeholder="м или ж" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -1424,8 +1450,8 @@ const PatientForm = ({
     }
   );
   const formSchema = z.object({
-    full_name: z.string().optional(),
-    gender: z.union([z.literal("м"), z.literal("ж")]).optional(),
+    full_name: z.string(),
+    gender: z.union([z.literal("м"), z.literal("ж")]),
     birthday: z.date().optional(),
     inhabited_localit: z
       .union([z.literal("Деревня"), z.literal("Город")])
@@ -1440,6 +1466,7 @@ const PatientForm = ({
     ischemia: z.union([z.literal("Да"), z.literal("Нет")]).optional(),
     dep: z.union([z.literal("Да"), z.literal("Нет")]).optional(),
   });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
@@ -1449,7 +1476,10 @@ const PatientForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2 p-2">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-2 p-2 w-full"
+      >
         <FormField
           control={form.control}
           name="full_name"
@@ -1707,8 +1737,8 @@ const PatientFormUpdate = ({
     }
   );
   const formSchema = z.object({
-    full_name: z.string().optional(),
-    gender: z.union([z.literal("м"), z.literal("ж")]).optional(),
+    full_name: z.string(),
+    gender: z.union([z.literal("м"), z.literal("ж")]),
     birthday: z.date().optional(),
     inhabited_localit: z
       .union([z.literal("Деревня"), z.literal("Город")])
@@ -2053,15 +2083,17 @@ const UserAddForm = ({
     username: z.string().min(2, {
       message: "Имя пользователя должно быть не менее 2 символов",
     }),
-    password: z.string().min(8, {
-      message: "Пароль должен быть не менее 8 символов",
+    password: z.string().min(6, {
+      message: "Пароль должен быть не менее 6 символов",
     }),
+    role: z.union([z.literal("explorer"), z.literal("therapist")]),
   });
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
       password: "",
+      role: "therapist",
     },
   });
 
@@ -2099,6 +2131,26 @@ const UserAddForm = ({
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <FormItem>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Роль" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="therapist">Врач</SelectItem>
+                  <SelectItem value="explorer">Исследователь</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="flex gap-2">
           {" "}
           <Button type="submit" className="w-full" variant={"outline"}>
@@ -2112,6 +2164,7 @@ const UserAddForm = ({
                 "username",
                 "Пользователь" + Math.floor(Math.random() * 1000)
               );
+              form.clearErrors();
               form.setValue("password", generatePassword());
             }}
           >
@@ -2173,6 +2226,29 @@ const Users = () => {
       },
     }
   );
+  const setUserRole = useMutation(
+    (params: { user_id: string; new_role: string }) => {
+      return api.patch("users/set_user_role", null, {
+        params,
+      });
+    },
+    {
+      onSuccess: () => {
+        toast({
+          title: "Успешно",
+          description: `Роль пользователя была обновлена`,
+        });
+        users.refetch();
+      },
+      onError: () => {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось обновить роль пользователя",
+          variant: "destructive",
+        });
+      },
+    }
+  );
   const deleteSuperUser = useMutation(
     (user_id: string) => {
       return api.delete("users/delete_user_from_superuser", {
@@ -2199,47 +2275,52 @@ const Users = () => {
   return (
     <>
       <UserAddForm users={users} />
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Имя пользователя</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.data?.data.map((user) => (
-            <TableRow>
-              <TableCell className="font-medium">{user.username}</TableCell>
-              <TableCell>
-                {user.is_superuser ? (
-                  <Button
-                    variant="outline"
-                    className="mr-2"
-                    onClick={() => deleteSuperUser.mutate(user.id)}
-                  >
-                    <UserMinus />{" "}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="mr-2"
-                    onClick={() => setSuperUser.mutate(user.id)}
-                  >
-                    {" "}
-                    <UserPlus />
-                  </Button>
-                )}
 
+      <ul className="space-y-2 mt-2">
+        {users.data?.data.map((user) => (
+          <li className="flex items-center justify-between" key={user.id}>
+            <span className="font-medium">{user.username}</span>
+            <div className="flex  gap-2">
+              {user.is_superuser ? (
                 <Button
-                  variant="destructive"
-                  onClick={() => deleteUser.mutate(user.id)}
+                  variant="outline"
+                  onClick={() => deleteSuperUser.mutate(user.id)}
                 >
-                  <XIcon />
+                  <UserMinus />{" "}
                 </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => setSuperUser.mutate(user.id)}
+                >
+                  {" "}
+                  <UserPlus />
+                </Button>
+              )}
+              <Select
+                onValueChange={(new_role) =>
+                  setUserRole.mutate({ user_id: user.id, new_role })
+                }
+                defaultValue={user.role}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Роль" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="therapist">Врач</SelectItem>
+                  <SelectItem value="explorer">Исследователь</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="destructive"
+                onClick={() => deleteUser.mutate(user.id)}
+              >
+                <XIcon />
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
     </>
   );
 };
@@ -2523,7 +2604,10 @@ function DrawerDialogPatient({ update }: { update: any }) {
         <Button variant="outline">Добавить пациента</Button>
       </DrawerTrigger>
       <DrawerContent>
-        <PatientForm setOpen={setOpen} update={update} />
+        <ScrollArea className="h-[400px]">
+          <PatientForm setOpen={setOpen} update={update} />
+          <ScrollBar />
+        </ScrollArea>
 
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>

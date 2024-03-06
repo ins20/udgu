@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import api from "@/axios";
 import { useMutation, useQuery } from "react-query";
 import { useToast } from "@/components/ui/use-toast";
-import { ResponseUser, User } from "@/types";
+import { ResponseError, ResponseUser, User } from "@/types";
 
 const formSchema = z.object({
   username: z
@@ -45,13 +45,13 @@ function Index() {
           to: "/dashboard",
         });
       },
-      onError: (err) => {
-        console.log(err)
-        toast({
-          title: "Ошибка",
-          description: "КОРС",
-          variant: "destructive",
-        });
+      onError: () => {
+
+        // toast({
+        //   title: "Ошибка",
+        //   description: "Не удалось авторизоваться",
+        //   variant: "destructive",
+        // });
       },
     }
   );
@@ -95,10 +95,7 @@ function Index() {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input
-                        placeholder="Имя пользователя"
-                        {...field}
-                      />
+                      <Input placeholder="Имя пользователя" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -7,9 +7,10 @@ export interface User {
   is_superuser: boolean;
   is_active: boolean;
   id: string;
+  role: "exporer" | "therapist";
 }
 
-export interface ResponseErrors {
+export interface ResponseError {
   detail: Detail[];
 }
 
