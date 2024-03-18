@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = "https://clinic.universal-hub.site/";
+const baseURL = "https://clinic.universal-hub.site/v1/";
 
 const api = axios.create({
   baseURL,

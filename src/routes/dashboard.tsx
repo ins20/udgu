@@ -9,18 +9,15 @@ import { useQuery } from "react-query";
 
 export const Route = createFileRoute("/dashboard")({
   component: () => {
-
-
-
     useQuery<AxiosResponse<Patient[]>>("all_patients", () =>
-      api.get("v1/patient/get_all", {
+      api.get("patient/get_all", {
         params: {
           limit: 6000,
         },
       })
     );
 
-    return (  
+    return (
       <div className="bg-[#EBEFF3] dark:bg-[#454545]">
         <div className="flex xl:flex-row xl:h-full xl:gap-10 flex-col gap-3 h-full">
           <Sidebar />

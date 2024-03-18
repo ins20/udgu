@@ -46,7 +46,7 @@ const Patients = () => {
   if (user?.data.role !== "therapist") navigate({ to: "/dashboard/profile" });
   const deletePatient = useMutation(
     (patient_id: string) =>
-      api.delete(`v1/patient/delete`, {
+      api.delete(`patient/delete`, {
         params: {
           patient_id,
         },
@@ -89,12 +89,15 @@ const Patients = () => {
       }),
       columnHelper.accessor("bp", {
         header: "Бп",
+        cell: ({ row }) => (row.original.bp ? "Да" : "Нет"),
       }),
       columnHelper.accessor("ischemia", {
         header: "Ишемия",
+        cell: ({ row }) => (row.original.ischemia ? "Да" : "Нет"),
       }),
       columnHelper.accessor("dep", {
         header: "Деп",
+        cell: ({ row }) => (row.original.dep ? "Да" : "Нет"),
       }),
       columnHelper.display({
         id: "actions",
@@ -131,7 +134,7 @@ const Patients = () => {
   const patients = useQuery<AxiosResponse<Patient[]>>(
     "patients",
     () =>
-      api.get("v1/patient/get_all_by_therapist", {
+      api.get("patient/get_all_by_therapist", {
         params: {
           limit: 6000,
         },
@@ -194,7 +197,9 @@ const Patients = () => {
             />
           </div>
           <ExportToExcel
-            dataSet={table.getCoreRowModel().rows.map(({ original }) => original)}
+            dataSet={table
+              .getCoreRowModel()
+              .rows.map(({ original }) => original)}
             fileName="Пациенты"
           />
         </div>

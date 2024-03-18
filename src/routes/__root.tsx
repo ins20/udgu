@@ -8,7 +8,7 @@ export const Route = createRootRoute({
   component: () => {
     const { toast } = useToast();
     const navigate = useNavigate({ from: "/" });
-    const user = useQuery("user", () => api.get("v1/users/me"), {
+    const user = useQuery("user", () => api.get("users/me"), {
       onSuccess: () => {
         navigate({
           to: "/dashboard",

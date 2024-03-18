@@ -57,7 +57,7 @@ const RecordForm = ({ defaultValues }: { defaultValues: PatientRecord }) => {
   });
   const deleteRecord = useMutation(
     () =>
-      api.delete("v1/patient_records/delete", {
+      api.delete("patient_records/delete", {
         params: {
           patient_record_id: defaultValues.id,
         },
@@ -77,7 +77,7 @@ const RecordForm = ({ defaultValues }: { defaultValues: PatientRecord }) => {
   const recordUpdate = useMutation(
     (values: z.infer<typeof formSchema>) => {
       return api.patch<PatientRecord>(
-        "v1/patient_records/update_patient_record",
+        "patient_records/update_patient_record",
         values,
         {
           params: {
@@ -206,7 +206,7 @@ const NewRecordForm = ({ patient_id }: { patient_id: String }) => {
 
   const patient = useMutation(
     (values: z.infer<typeof formSchema>) =>
-      api.post("v1/patient_records/create", {
+      api.post("patient_records/create", {
         ...values,
         patient_id,
       }),
@@ -303,7 +303,7 @@ const PatientForm = () => {
   const patient = useQuery(
     `patient${patient_id}`,
     () =>
-      api.get<Patient>(`v1/patient/get`, {
+      api.get<Patient>(`patient/get`, {
         params: {
           patient_id,
         },
@@ -321,7 +321,7 @@ const PatientForm = () => {
     }
   );
   const patientRecords = useQuery(`patient_records${patient_id}`, () =>
-    api.get<PatientRecord[]>(`v1/patient_records/get_all_by_patient`, {
+    api.get<PatientRecord[]>(`patient_records/get_all_by_patient`, {
       params: {
         patient_id,
       },
@@ -343,7 +343,7 @@ const PatientForm = () => {
 
   const patientUpdate = useMutation(
     (values: z.infer<typeof formSchema>) => {
-      return api.patch("v1/patient/update", values, {
+      return api.patch("patient/update", values, {
         params: {
           patient_id,
         },

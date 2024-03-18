@@ -66,6 +66,7 @@ export const validateValue = (
   initialValue: string | number | Date | boolean,
   rule: StringRule | NumberRule
 ) => {
+  console.log(value)
   if (typeof value === "string" && typeof initialValue === "string") {
     return rulesString[rule as StringRule](value, initialValue);
   }
@@ -74,6 +75,7 @@ export const validateValue = (
     return rulesNumber[rule as NumberRule](value, initialValue);
   }
   if (typeof value === "boolean" && typeof initialValue === "boolean") {
+    console.log(value, initialValue);
     return value === initialValue;
   }
   if (value instanceof Date && initialValue instanceof Date) {

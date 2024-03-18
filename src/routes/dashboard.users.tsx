@@ -49,11 +49,11 @@ export const Route = createFileRoute("/dashboard/users")({
 
     const users = useQuery<AxiosResponse<User[]>>({
       queryKey: ["users"],
-      queryFn: () => api.get("v1/users/get_all"),
+      queryFn: () => api.get("users/get_all"),
     });
     const deleteUser = useMutation(
       (user_id: string) => {
-        return api.delete("v1/users/deactivate", {
+        return api.delete("users/deactivate", {
           params: { user_id },
         });
       },
@@ -76,7 +76,7 @@ export const Route = createFileRoute("/dashboard/users")({
     );
     const setUserRole = useMutation(
       (params: { user_id: string; new_role: string }) => {
-        return api.patch("v1/users/set_user_role", null, {
+        return api.patch("users/set_user_role", null, {
           params,
         });
       },
@@ -149,7 +149,7 @@ const UserAddForm = () => {
 
   const addUser = useMutation(
     (values: z.infer<typeof formSchema>) => {
-      return api.post("v1/auth/registration", values);
+      return api.post("auth/registration", values);
     },
     {
       onSuccess: () => {

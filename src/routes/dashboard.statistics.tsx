@@ -85,6 +85,8 @@ const multiFilter: FilterFn<any> = (
       rowOriginal.original.birthday && Date.parse(rowOriginal.original.birthday)
         ? new Date(rowOriginal.original.birthday)
         : undefined,
+    inhabited_locality:
+      rowOriginal.original.inhabited_locality === "Город" ? "Город" : "Район",
   };
 
   if (!value.value.length) {
@@ -125,7 +127,6 @@ const columns: ColumnDef<Patient>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Пол" />
     ),
-    cell: ({ row }) => (row.original.gender === "м" ? "м" : "ж"),
   },
   {
     accessorKey: "birthday",
@@ -176,18 +177,21 @@ const columns: ColumnDef<Patient>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="БП" />
     ),
+    cell: ({ row }) => (row.original.bp ? "Да" : "Нет"),
   },
   {
     accessorKey: "ischemia",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Ишемия" />
     ),
+    cell: ({ row }) => (row.original.ischemia ? "Да" : "Нет"),
   },
   {
     accessorKey: "dep",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="ДЭП" />
     ),
+    cell: ({ row }) => (row.original.dep ? "Да" : "Нет"),
   },
 ];
 const FilterTypeSchema = z.object({
@@ -277,7 +281,9 @@ export const Route = createFileRoute("/dashboard/statistics")({
               />
             </div>
             <ExportToExcel
-              dataSet={table.getFilteredRowModel().rows.map(({ original }) => original)}
+              dataSet={table
+                .getFilteredRowModel()
+                .rows.map(({ original }) => original)}
               fileName="Пациенты"
             />
           </div>
@@ -496,7 +502,9 @@ export const Route = createFileRoute("/dashboard/statistics")({
                     {
                       table
                         .getFilteredRowModel()
-                        .rows.filter((row) => row.original.inhabited_locality === "Город").length
+                        .rows.filter(
+                          (row) => row.original.inhabited_locality === "Город"
+                        ).length
                     }
                   </li>
                   <li className="text-nowrap">
@@ -504,7 +512,9 @@ export const Route = createFileRoute("/dashboard/statistics")({
                     {
                       table
                         .getFilteredRowModel()
-                        .rows.filter((row) => row.original.inhabited_locality === "Деревня").length
+                        .rows.filter(
+                          (row) => row.original.inhabited_locality === "Деревня"
+                        ).length
                     }
                   </li>
                 </ul>

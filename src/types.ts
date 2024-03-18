@@ -16,7 +16,7 @@ export interface Patient {
   full_name?: string;
   living_place?: string;
   job_title?: string;
-  inhabited_locality?: "Деревня" | "Город";
+  inhabited_locality?: "Деревня" | "Район";
   bp?: "Да" | "Нет";
   ischemia?: "Да" | "Нет";
   dep?: "Да" | "Нет";

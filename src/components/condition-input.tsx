@@ -1,9 +1,7 @@
 import {
-  Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { DatePicker } from "./date-picker";
@@ -105,10 +103,8 @@ const ConditionField = ({
           render={({ field }) => (
             <FormItem>
               <Select
-                onValueChange={(value) =>
-                  field.onChange(Boolean(Number(value)))
-                }
-                defaultValue={field.value ? "1" : "0"}
+                onValueChange={field.onChange}
+                defaultValue={String(field.value)}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -116,8 +112,8 @@ const ConditionField = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="1">М</SelectItem>
-                  <SelectItem value="">Ж</SelectItem>
+                  <SelectItem value="м">М</SelectItem>
+                  <SelectItem value="ж">Ж</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -133,19 +129,17 @@ const ConditionField = ({
           render={({ field }) => (
             <FormItem>
               <Select
-                onValueChange={(value) =>
-                  field.onChange(Boolean(Number(value)))
-                }
-                defaultValue={field.value ? "1" : "0"}
+                onValueChange={field.onChange}
+                defaultValue={String(field.value)}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Город или деревня" />
+                    <SelectValue placeholder="Город или район" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="1">Город</SelectItem>
-                  <SelectItem value="0">Район</SelectItem>
+                  <SelectItem value="Город">Город</SelectItem>
+                  <SelectItem value="Район">Район</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -175,7 +169,7 @@ const ConditionField = ({
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="1">Да</SelectItem>
-                  <SelectItem value="">Нет</SelectItem>
+                  <SelectItem value="0">Нет</SelectItem>
                 </SelectContent>
               </Select>
 

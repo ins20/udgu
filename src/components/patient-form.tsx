@@ -25,7 +25,7 @@ import { toast } from "./ui/use-toast";
 export const PatientForm = () => {
   const patient = useMutation(
     (values: z.infer<typeof formSchema>) => {
-      return api.post("v1/patient/create", values);
+      return api.post("patient/create", values);
     },
     {
       onSuccess: () => {

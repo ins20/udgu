@@ -32,7 +32,7 @@ const DashboardProfile = () => {
   if(!user) return 
   const changePassword = useMutation(
     (values: z.infer<typeof formSchema>) =>
-      api.patch("v1/users/change_password", values),
+      api.patch("users/change_password", values),
     {
       onSuccess: () => {
         toast({

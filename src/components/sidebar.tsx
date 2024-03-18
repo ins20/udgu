@@ -29,7 +29,7 @@ export function Sidebar() {
   });
   const user = useQueryClient().getQueryData<AxiosResponse<User>>("user");
 
-  const logout = useMutation(() => api.post("v1/auth/logout"), {
+  const logout = useMutation(() => api.post("auth/logout"), {
     onSuccess: () => {
       navigate({
         to: "/",

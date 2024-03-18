@@ -30,7 +30,7 @@ const formSchema = z.object({
 function Index() {
   const navigate = useNavigate();
   const login = useMutation(
-    (values: z.infer<typeof formSchema>) => api.post("v1/auth/login", values),
+    (values: z.infer<typeof formSchema>) => api.post("auth/login", values),
     {
       onSuccess: () => {
         navigate({
@@ -43,16 +43,24 @@ function Index() {
         localStorage.setItem("user", "true");
       },
       onError: (err: AxiosError) => {
-        if (err.code === "ERR_NETWORK") {
-          navigate({
-            to: "/dashboard",
-          });
+        if (err.response?.status === 401) {
+          //   toast({
+          //     variant: "destructive",
+          //     description: "Не удалось войти в аккаунт",
+          //     title: "Вход",
+          //   });
+          // } else {
+          //   toast({
+          //     description: "Вы успешно вошли в аккаунт",
+          //     title: "Вход",
+          //   });
+          //   localStorage.setItem("user", "true");
+
           toast({
-            description: "Вы вошли в аккаунт",
+            variant: "destructive",
+            description: "Не удалось войти в аккаунт",
             title: "Вход",
           });
-          localStorage.setItem("user", "true");
-
         }
       },
     }
