@@ -16,7 +16,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-3 bg-[#EBEFF3] dark:bg-slate-800 ", className)}
       captionLayout="dropdown-buttons"
       fromYear={new Date().getFullYear() - 110}
       toYear={new Date().getFullYear()}
@@ -30,7 +30,7 @@ function Calendar({
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
-        caption_dropdowns: "flex",
+        caption_dropdowns: "flex gap-2 dark:text-slate-800",
         vhidden: "hidden",
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",

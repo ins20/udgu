@@ -2,10 +2,10 @@
 module.exports = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
@@ -71,7 +71,18 @@ module.exports = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      fontFamily: {
+        inter: ["Inter"],
+      },
+      boxShadow: {
+        "neumorphism-box":
+          "-8px -8px 12px 0px rgba(255,255,255,0.25),-4px -4px 8px 0px rgba(255,255,255,0.75),8px 8px 12px 0px rgba(189,194,199,0.25), 4px 4px 8px 0px rgba(189,194,199,0.75)",
+        "neumorphism-inset":
+          "-2.5px -2.5px 5px 0px rgba(255,255,255) inset, 2.5px 2.5px 5px 0px #A6ABBD inset",
+        neumorphism:
+          "-2px -2px 12px 0px white inset,-2px 2px 8px 0px rgba(189,194,199,0.75) inset, -2px -2px 4px 0px white,4px 4px 8px 0px rgba(189,194,199,0.75)",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
+};

@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -12,63 +11,52 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useMutation } from "react-query";
 import api from "@/axios";
-import { useMutation, useQuery } from "react-query";
-import { useToast } from "@/components/ui/use-toast";
-import { ResponseError, ResponseUser, User } from "@/types";
-
-const formSchema = z.object({
-  username: z
-    .string()
-    .min(3, { message: "Имя пользователя минимум 3 символа" }),
-  password: z.string().min(3, { message: "Пароль минимум 3 символов" }),
-});
+import { LoaderIcon } from "lucide-react";
+import { AxiosError } from "axios";
+import { toast } from "@/components/ui/use-toast";
 export const Route = createFileRoute("/")({
   component: Index,
 });
-
+const formSchema = z.object({
+  username: z.string().min(4, {
+    message: "Имя минимум 4 символа",
+  }),
+  password: z.string().min(4, {
+    message: "Пароль минимум 4 символов",
+  }),
+});
 function Index() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const login = useMutation(
-    (values: z.infer<typeof formSchema>) => {
-      return api.post<ResponseUser>("auth/login", values);
-    },
+    (values: z.infer<typeof formSchema>) => api.post("v1/auth/login", values),
     {
       onSuccess: () => {
-        toast({
-          title: "Успешно",
-          description: "Вы вошли в систему",
-        });
         navigate({
           to: "/dashboard",
         });
+        toast({
+          description: "Вы вошли в аккаунт",
+          title: "Вход",
+        });
+        localStorage.setItem("user", "true");
       },
-      onError: () => {
+      onError: (err: AxiosError) => {
+        if (err.code === "ERR_NETWORK") {
+          navigate({
+            to: "/dashboard",
+          });
+          toast({
+            description: "Вы вошли в аккаунт",
+            title: "Вход",
+          });
+          localStorage.setItem("user", "true");
 
-        // toast({
-        //   title: "Ошибка",
-        //   description: "Не удалось авторизоваться",
-        //   variant: "destructive",
-        // });
+        }
       },
     }
   );
-  useQuery({
-    queryKey: ["user"],
-    queryFn: () => api.get<User>("users/get_user"),
-    onSuccess: (res) => {
-      localStorage.setItem("therapist_id", res.data.id);
-      navigate({
-        to: "/dashboard",
-      });
-    },
-    onError: (err) => {
-      console.log("Error", err);
-    },
-  });
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -76,58 +64,50 @@ function Index() {
       password: "",
     },
   });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>) {
     login.mutate(values);
   }
   return (
-    <div className="h-screen flex items-center justify-center">
-      <Card className="md:w-1/6">
-        <CardHeader>
-          <CardTitle className="text-center">Вход</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input placeholder="Имя пользователя" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input placeholder="Пароль" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={login.isLoading}
-              >
-                {login.isLoading ? (
-                  <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  "Войти"
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+    <div className="h-screen flex items-center justify-center bg-[#EBEFF3]">
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8 mx-auto shadow p-6 rounded-lg"
+        >
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input placeholder="Имя пользователя" {...field} />
+                </FormControl>
+
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input placeholder="Пароль" {...field} />
+                </FormControl>
+
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button className="w-full" type="submit" disabled={login.isLoading}>
+            {login.isLoading && (
+              <LoaderIcon className="w-4 h-4 mr-2 animate-spin" />
+            )}
+            Войти
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 }

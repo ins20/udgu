@@ -12,8 +12,12 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as DashboardImport } from './routes/dashboard'
-import { Route as R404Import } from './routes/__404'
 import { Route as IndexImport } from './routes/index'
+import { Route as DashboardIndexImport } from './routes/dashboard.index'
+import { Route as DashboardUsersImport } from './routes/dashboard.users'
+import { Route as DashboardStatisticsImport } from './routes/dashboard.statistics'
+import { Route as DashboardProfileImport } from './routes/dashboard.profile'
+import { Route as DashboardPatientIdImport } from './routes/dashboard.$patientId'
 
 // Create/Update Routes
 
@@ -22,14 +26,34 @@ const DashboardRoute = DashboardImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const R404Route = R404Import.update({
-  id: '/__404',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const IndexRoute = IndexImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const DashboardIndexRoute = DashboardIndexImport.update({
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+
+const DashboardUsersRoute = DashboardUsersImport.update({
+  path: '/users',
+  getParentRoute: () => DashboardRoute,
+} as any)
+
+const DashboardStatisticsRoute = DashboardStatisticsImport.update({
+  path: '/statistics',
+  getParentRoute: () => DashboardRoute,
+} as any)
+
+const DashboardProfileRoute = DashboardProfileImport.update({
+  path: '/profile',
+  getParentRoute: () => DashboardRoute,
+} as any)
+
+const DashboardPatientIdRoute = DashboardPatientIdImport.update({
+  path: '/$patientId',
+  getParentRoute: () => DashboardRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -40,13 +64,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/__404': {
-      preLoaderRoute: typeof R404Import
-      parentRoute: typeof rootRoute
-    }
     '/dashboard': {
       preLoaderRoute: typeof DashboardImport
       parentRoute: typeof rootRoute
+    }
+    '/dashboard/$patientId': {
+      preLoaderRoute: typeof DashboardPatientIdImport
+      parentRoute: typeof DashboardImport
+    }
+    '/dashboard/profile': {
+      preLoaderRoute: typeof DashboardProfileImport
+      parentRoute: typeof DashboardImport
+    }
+    '/dashboard/statistics': {
+      preLoaderRoute: typeof DashboardStatisticsImport
+      parentRoute: typeof DashboardImport
+    }
+    '/dashboard/users': {
+      preLoaderRoute: typeof DashboardUsersImport
+      parentRoute: typeof DashboardImport
+    }
+    '/dashboard/': {
+      preLoaderRoute: typeof DashboardIndexImport
+      parentRoute: typeof DashboardImport
     }
   }
 }
@@ -55,8 +95,13 @@ declare module '@tanstack/react-router' {
 
 export const routeTree = rootRoute.addChildren([
   IndexRoute,
-  R404Route,
-  DashboardRoute,
+  DashboardRoute.addChildren([
+    DashboardPatientIdRoute,
+    DashboardProfileRoute,
+    DashboardStatisticsRoute,
+    DashboardUsersRoute,
+    DashboardIndexRoute,
+  ]),
 ])
 
 /* prettier-ignore-end */
