@@ -17,13 +17,12 @@ export const Route = createRootRoute({
       onError: () => {
         navigate({ to: "/" });
         toast({
-          title: "Войдите в систему!",
+          title: "Войдите в систему",
           description: "Пользователь не найден.",
           variant: "destructive",
         });
       },
       staleTime: 1000 * 60 * 60,
-      enabled: Boolean(localStorage.getItem("user")),
     });
     if (user.isLoading)
       return (

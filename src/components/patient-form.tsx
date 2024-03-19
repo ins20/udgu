@@ -45,7 +45,7 @@ export const PatientForm = () => {
     gender: z.union([z.literal("м"), z.literal("ж")]),
     birthday: z.date().optional(),
     inhabited_locality: z
-      .union([z.literal("Деревня"), z.literal("Город")])
+      .union([z.literal("Деревня"), z.literal("Район")])
       .optional(),
     living_place: z.string().optional(),
     job_title: z.string().optional(),
@@ -145,7 +145,7 @@ export const PatientForm = () => {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="Город">Город</SelectItem>
-                  <SelectItem value="Деревня">Деревня</SelectItem>
+                  <SelectItem value="Район">Район</SelectItem>
                 </SelectContent>
               </Select>
             </FormItem>

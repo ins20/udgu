@@ -436,7 +436,7 @@ export const Route = createFileRoute("/dashboard/statistics")({
                     {
                       table
                         .getFilteredRowModel()
-                        .rows.filter((row) => row.original.ischemia === "Да")
+                        .rows.filter((row) => row.original.ischemia)
                         .length
                     }
                   </li>
@@ -445,7 +445,7 @@ export const Route = createFileRoute("/dashboard/statistics")({
                     {
                       table
                         .getFilteredRowModel()
-                        .rows.filter((row) => row.original.ischemia === "Нет")
+                        .rows.filter((row) => !row.original.ischemia)
                         .length
                     }
                   </li>
@@ -459,7 +459,7 @@ export const Route = createFileRoute("/dashboard/statistics")({
                     {
                       table
                         .getFilteredRowModel()
-                        .rows.filter((row) => row.original.bp === "Да").length
+                        .rows.filter((row) => row.original.bp).length
                     }
                   </li>
                   <li className="text-nowrap">
@@ -467,7 +467,7 @@ export const Route = createFileRoute("/dashboard/statistics")({
                     {
                       table
                         .getFilteredRowModel()
-                        .rows.filter((row) => row.original.bp === "Нет").length
+                        .rows.filter((row) =>!row.original.bp).length
                     }
                   </li>
                 </ul>
@@ -481,7 +481,7 @@ export const Route = createFileRoute("/dashboard/statistics")({
                     {
                       table
                         .getFilteredRowModel()
-                        .rows.filter((row) => row.original.dep === "Да").length
+                        .rows.filter((row) => row.original.dep).length
                     }
                   </li>
                   <li className="text-nowrap">
@@ -489,7 +489,7 @@ export const Route = createFileRoute("/dashboard/statistics")({
                     {
                       table
                         .getFilteredRowModel()
-                        .rows.filter((row) => row.original.dep === "Нет").length
+                        .rows.filter((row) => !row.original.dep).length
                     }
                   </li>
                 </ul>
@@ -513,7 +513,7 @@ export const Route = createFileRoute("/dashboard/statistics")({
                       table
                         .getFilteredRowModel()
                         .rows.filter(
-                          (row) => row.original.inhabited_locality === "Деревня"
+                          (row) => row.original.inhabited_locality !== "Город"
                         ).length
                     }
                   </li>

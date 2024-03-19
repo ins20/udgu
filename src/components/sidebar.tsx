@@ -38,7 +38,6 @@ export function Sidebar() {
         description: "Вы вышли из аккаунта",
         title: "Выход",
       });
-      localStorage.removeItem("user");
     },
     onError: (err) => {
       console.log(err);

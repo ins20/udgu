@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,11 +11,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useMutation } from "react-query";
+import { useMutation, useQueryClient } from "react-query";
 import api from "@/axios";
 import { LoaderIcon } from "lucide-react";
-import { AxiosError } from "axios";
-import { toast } from "@/components/ui/use-toast";
+
 export const Route = createFileRoute("/")({
   component: Index,
 });
@@ -28,40 +27,12 @@ const formSchema = z.object({
   }),
 });
 function Index() {
-  const navigate = useNavigate();
+  const user = useQueryClient();
   const login = useMutation(
     (values: z.infer<typeof formSchema>) => api.post("auth/login", values),
     {
-      onSuccess: () => {
-        navigate({
-          to: "/dashboard",
-        });
-        toast({
-          description: "Вы вошли в аккаунт",
-          title: "Вход",
-        });
-        localStorage.setItem("user", "true");
-      },
-      onError: (err: AxiosError) => {
-        if (err.response?.status === 401) {
-          //   toast({
-          //     variant: "destructive",
-          //     description: "Не удалось войти в аккаунт",
-          //     title: "Вход",
-          //   });
-          // } else {
-          //   toast({
-          //     description: "Вы успешно вошли в аккаунт",
-          //     title: "Вход",
-          //   });
-          //   localStorage.setItem("user", "true");
-
-          toast({
-            variant: "destructive",
-            description: "Не удалось войти в аккаунт",
-            title: "Вход",
-          });
-        }
+      onMutate: () => {
+        user.invalidateQueries("user");
       },
     }
   );
@@ -76,7 +47,7 @@ function Index() {
     login.mutate(values);
   }
   return (
-    <div className="h-screen flex items-center justify-center bg-[#EBEFF3]">
+    <div className="h-screen flex items-center justify-center bg-[#EBEFF3] dark:bg-[#333333]">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
