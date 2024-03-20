@@ -72,7 +72,7 @@ function Index() {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input placeholder="Пароль" {...field} />
+                  <Input placeholder="Пароль" {...field} type="password" />
                 </FormControl>
 
                 <FormMessage />

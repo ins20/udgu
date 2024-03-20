@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = "https://clinic.universal-hub.site/v1/";
+const baseURL = "https://clinic.universal-hub.site/";
 
 const api = axios.create({
   baseURL,
@@ -16,7 +16,7 @@ api.interceptors.response.use(
     
     if (error?.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      await axios.put(baseURL + "v1/auth/refresh_token", null, {
+      await axios.put(baseURL + "auth/refresh_token", null, {
         withCredentials: true,
       });
       return api(originalRequest);

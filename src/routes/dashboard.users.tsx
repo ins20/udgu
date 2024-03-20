@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { toast } from "@/components/ui/use-toast";
+import { generatePassword } from "@/lib/utils";
 import { User } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Select } from "@radix-ui/react-select";
@@ -24,124 +25,116 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AxiosResponse } from "axios";
 import { Wrench, XIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import { z } from "zod";
 
-function generatePassword() {
-  var length = 8,
-    charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-    retVal = "";
-  for (var i = 0, n = charset.length; i < length; ++i) {
-    retVal += charset.charAt(Math.floor(Math.random() * n));
-  }
-  return retVal;
-}
+
+const Users = () => {
+  const navigate = useNavigate();
+  const user = useQueryClient().getQueryData<AxiosResponse<User>>("user");
+  if (!user?.data.is_superuser) navigate({ to: "/" });
+
+  const users = useQuery<AxiosResponse<User[]>>({
+    queryKey: ["users"],
+    queryFn: () => api.get("users/get_all"),
+  });
+  const deleteUser = useMutation(
+    (user_id: string) => {
+      return api.delete("users/deactivate", {
+        params: { user_id },
+      });
+    },
+    {
+      onSuccess: () => {
+        toast({
+          title: "Успешно",
+          description: `Пользователь удален`,
+        });
+        users.refetch();
+      },
+      onError: () => {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось удалить пользователя",
+          variant: "destructive",
+        });
+      },
+    }
+  );
+  const setUserRole = useMutation(
+    (params: { user_id: string; new_role: string }) => {
+      return api.patch("users/set_user_role", null, {
+        params,
+      });
+    },
+    {
+      onSuccess: () => {
+        toast({
+          title: "Успешно",
+          description: `Роль пользователя была обновлена`,
+        });
+        users.refetch();
+      },
+      onError: () => {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось обновить роль пользователя",
+          variant: "destructive",
+        });
+      },
+    }
+  );
+
+  return (
+    <div className="flex xl:flex-row flex-col gap-6 h-full">
+      <div className="xl:w-1/2 shadow-neumorphism dark:shadow p-6 rounded-2xl h-min">
+        <UserAddForm />
+      </div>
+
+      <div className="xl:w-1/2 shadow-neumorphism dark:shadow xl:p-6 p-3 rounded-2xl h-full">
+        <Table>
+          <TableBody className="space-y-2 mt-2">
+            {users.data?.data.map((user) => (
+              <TableRow
+                className="hover:bg-transparent border-none"
+                key={user.id}
+              >
+                <TableCell>{user.username}</TableCell>
+                <TableCell>
+                  <Select
+                    onValueChange={(new_role) =>
+                      setUserRole.mutate({ user_id: user.id, new_role })
+                    }
+                    defaultValue={user.role}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Роль" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="therapist">Врач</SelectItem>
+                      <SelectItem value="explorer">Исследователь</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    size={"icon"}
+                    onClick={() => deleteUser.mutate(user.id)}
+                  >
+                    <XIcon />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+};
 
 export const Route = createFileRoute("/dashboard/users")({
-  component: () => {
-    const navigate = useNavigate();
-    const user = useQueryClient().getQueryData<AxiosResponse<User>>("user");
-    if (!user?.data.is_superuser) navigate({ to: "/" });
-
-    const users = useQuery<AxiosResponse<User[]>>({
-      queryKey: ["users"],
-      queryFn: () => api.get("users/get_all"),
-    });
-    const deleteUser = useMutation(
-      (user_id: string) => {
-        return api.delete("users/deactivate", {
-          params: { user_id },
-        });
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Успешно",
-            description: `Пользователь удален`,
-          });
-          users.refetch();
-        },
-        onError: () => {
-          toast({
-            title: "Ошибка",
-            description: "Не удалось удалить пользователя",
-            variant: "destructive",
-          });
-        },
-      }
-    );
-    const setUserRole = useMutation(
-      (params: { user_id: string; new_role: string }) => {
-        return api.patch("users/set_user_role", null, {
-          params,
-        });
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Успешно",
-            description: `Роль пользователя была обновлена`,
-          });
-          users.refetch();
-        },
-        onError: () => {
-          toast({
-            title: "Ошибка",
-            description: "Не удалось обновить роль пользователя",
-            variant: "destructive",
-          });
-        },
-      }
-    );
-
-    return (
-      <div className="flex xl:flex-row flex-col gap-6 h-full">
-        <div className="xl:w-1/2 shadow-neumorphism dark:shadow p-6 rounded-2xl h-min">
-          <UserAddForm  />
-        </div>
-
-        <div className="xl:w-1/2 shadow-neumorphism dark:shadow xl:p-6 p-3 rounded-2xl h-full">
-          <Table>
-            <TableBody className="space-y-2 mt-2">
-              {users.data?.data.map((user) => (
-                <TableRow className="hover:bg-transparent border-none" key={user.id}>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>
-                    <Select
-                      onValueChange={(new_role) =>
-                        setUserRole.mutate({ user_id: user.id, new_role })
-                      }
-                      defaultValue={user.role}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Роль" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="therapist">Врач</SelectItem>
-                        <SelectItem value="explorer">Исследователь</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      size={"icon"}
-                      onClick={() => deleteUser.mutate(user.id)}
-                    >
-                      <XIcon />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    );
-  },
+  component: Users,
 });
 
 const UserAddForm = () => {

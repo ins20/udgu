@@ -29,19 +29,23 @@ const formSchema = z.object({
 
 const DashboardProfile = () => {
   const user = useQueryClient().getQueryData<AxiosResponse<User>>("user");
-  if(!user) return 
+  if (!user) return;
   const changePassword = useMutation(
     (values: z.infer<typeof formSchema>) =>
       api.patch("users/change_password", values),
     {
       onSuccess: () => {
         toast({
-          description: "Вы вошли в аккаунт",
-          title: "Вход",
+          description: "Вы изменили пароль",
+          title: "Изменение пароля",
         });
       },
       onError: (err) => {
-        console.log(err);
+        toast({
+          variant: "destructive",
+          description: "Не удалось изменить пароль",
+          title: "Изменение пароля",
+        });
       },
     }
   );
@@ -59,7 +63,9 @@ const DashboardProfile = () => {
     <div className="h-full flex align-items justify-center">
       <div className="shadow-neumorphism-box dark:shadow p-6 rounded-2xl h-fit my-auto">
         <p className="text-xl">{user?.data.username}</p>
-        <p className="my-4">{user?.data.role === "therapist" ? "Врач" : "Исследователь"}</p>
+        <p className="my-4">
+          {user?.data.role === "therapist" ? "Врач" : "Исследователь"}
+        </p>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}

@@ -38,6 +38,17 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/components/ui/use-toast";
 import { ExportToExcel } from "@/components/excel-export";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 const columnHelper = createColumnHelper<Patient>();
 
 const Patients = () => {
@@ -96,7 +107,7 @@ const Patients = () => {
         cell: ({ row }) => (row.original.ischemia ? "Да" : "Нет"),
       }),
       columnHelper.accessor("dep", {
-        header: "Деп",
+        header: "Дэп",
         cell: ({ row }) => (row.original.dep ? "Да" : "Нет"),
       }),
       columnHelper.display({
@@ -118,12 +129,35 @@ const Patients = () => {
               >
                 <NotebookPenIcon />
               </Button>
-              <Button
-                size="icon"
-                onClick={() => deletePatient.mutate(String(row.original.id))}
-              >
-                <XIcon />
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="icon">
+                    <XIcon />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Вы точно хотите удалить пациента?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Это действие невозможно отменить. Это приведет к
+                      необратимому удалению данных пациента и его записей.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Закрыть</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-red-500 hover:bg-red-600 shadow-none hover:shadow-none text-white hover:text-white"
+                      onClick={() =>
+                        deletePatient.mutate(String(row.original.id))
+                      }
+                    >
+                      Удалить
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           );
         },

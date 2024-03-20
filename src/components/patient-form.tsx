@@ -33,7 +33,6 @@ export const PatientForm = () => {
           title: "Успешно",
           description: "Пациент успешно создан",
         });
-        form.reset()
         patients.invalidateQueries("patients");
       },
       onError: () => {},
@@ -45,17 +44,18 @@ export const PatientForm = () => {
     gender: z.union([z.literal("м"), z.literal("ж")]),
     birthday: z.date().optional(),
     inhabited_locality: z
-      .union([z.literal("Деревня"), z.literal("Район")])
+      .union([z.literal("Город"), z.literal("Район")])
       .optional(),
     living_place: z.string().optional(),
     job_title: z.string().optional(),
-    bp: z.union([z.literal("Да"), z.literal("Нет")]),
-    dep: z.union([z.literal("Да"), z.literal("Нет")]),
-    ischemia: z.union([z.literal("Да"), z.literal("Нет")]),
+    bp: z.boolean().optional(),
+    dep: z.boolean().optional(),
+    ischemia: z.boolean().optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+
     // values: {
     //   full_name: "sdf",
     //   gender: "м",
@@ -186,15 +186,20 @@ export const PatientForm = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Бп</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select
+                onValueChange={(value) =>
+                  field.onChange(Boolean(Number(value)))
+                }
+                defaultValue={field.value ? "1" : "0"}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="БП" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Да">Да</SelectItem>
-                  <SelectItem value="Нет">Нет</SelectItem>
+                  <SelectItem value="1">Да</SelectItem>
+                  <SelectItem value="0">Нет</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -207,16 +212,21 @@ export const PatientForm = () => {
           name="dep"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Деп</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel>Дэп</FormLabel>
+              <Select
+                onValueChange={(value) =>
+                  field.onChange(Boolean(Number(value)))
+                }
+                defaultValue={field.value ? "1" : "0"}
+              >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Деп" />
+                    <SelectValue placeholder="Дэп" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Да">Да</SelectItem>
-                  <SelectItem value="Нет">Нет</SelectItem>
+                  <SelectItem value="1">Да</SelectItem>
+                  <SelectItem value="0">Нет</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -230,15 +240,20 @@ export const PatientForm = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Ишемия</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select
+                onValueChange={(value) =>
+                  field.onChange(Boolean(Number(value)))
+                }
+                defaultValue={field.value ? "1" : "0"}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Ишемия" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Да">Да</SelectItem>
-                  <SelectItem value="Нет">Нет</SelectItem>
+                  <SelectItem value="1">Да</SelectItem>
+                  <SelectItem value="0">Нет</SelectItem>
                 </SelectContent>
               </Select>
 

@@ -292,13 +292,13 @@ const PatientForm = () => {
     gender: z.union([z.literal("м"), z.literal("ж")]).optional(),
     birthday: z.date().optional(),
     inhabited_locality: z
-      .union([z.literal("Деревня"), z.literal("Город")])
+      .union([z.literal("Район"), z.literal("Город")])
       .optional(),
     living_place: z.string().optional(),
     job_title: z.string().optional(),
-    bp: z.union([z.literal("Да"), z.literal("Нет")]).optional(),
-    dep: z.union([z.literal("Да"), z.literal("Нет")]).optional(),
-    ischemia: z.union([z.literal("Да"), z.literal("Нет")]).optional(),
+    bp: z.boolean().optional(),
+    dep: z.boolean().optional(),
+    ischemia: z.boolean().optional(),
   });
   const patient = useQuery(
     `patient${patient_id}`,
@@ -337,6 +337,12 @@ const PatientForm = () => {
             patient.data.data.birthday && Date.parse(patient.data.data.birthday)
               ? new Date(patient.data.data.birthday)
               : undefined,
+          inhabited_locality:
+            patient.data.data.inhabited_locality === "Город"
+              ? "Город"
+              : "Район",
+          living_place: patient.data.data.living_place || "",
+          job_title: patient.data.data.job_title || "",
         }
       : {},
   });
@@ -355,6 +361,7 @@ const PatientForm = () => {
           title: "Успешно",
           description: "Данные успешно обновлены.",
         });
+        patient.refetch();
       },
       onError: () => {},
     }
@@ -390,7 +397,7 @@ const PatientForm = () => {
                           <FormLabel>ФИО</FormLabel>
                           <FormControl>
                             <Input
-                              value={String(field.value)}
+                              value={field.value}
                               onChange={field.onChange}
                               placeholder="ФИО"
                             />
@@ -463,7 +470,7 @@ const PatientForm = () => {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="Город">Город</SelectItem>
-                              <SelectItem value="Деревня">Деревня</SelectItem>
+                              <SelectItem value="Район">Район</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -480,7 +487,7 @@ const PatientForm = () => {
 
                           <FormControl>
                             <Input
-                              value={String(field.value)}
+                              value={field.value}
                               onChange={field.onChange}
                               placeholder="Место жительства"
                             />
@@ -503,7 +510,7 @@ const PatientForm = () => {
                           >
                             <FormControl>
                               <Input
-                                value={String(field.value)}
+                                value={field.value}
                                 onChange={field.onChange}
                                 placeholder="Должность"
                               />
@@ -522,8 +529,10 @@ const PatientForm = () => {
                           <FormLabel>Бп</FormLabel>
 
                           <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            onValueChange={(value) =>
+                              field.onChange(Boolean(Number(value)))
+                            }
+                            defaultValue={field.value ? "1" : "0"}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -531,11 +540,10 @@ const PatientForm = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Да">Да</SelectItem>
-                              <SelectItem value="Нет">Нет</SelectItem>
+                              <SelectItem value="1">Да</SelectItem>
+                              <SelectItem value="0">Нет</SelectItem>
                             </SelectContent>
                           </Select>
-
                           <FormMessage />
                         </FormItem>
                       )}
@@ -545,20 +553,22 @@ const PatientForm = () => {
                       name="dep"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Деп</FormLabel>
+                          <FormLabel>Дэп</FormLabel>
 
                           <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            onValueChange={(value) =>
+                              field.onChange(Boolean(Number(value)))
+                            }
+                            defaultValue={field.value ? "1" : "0"}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Деп" />
+                                <SelectValue placeholder="Дэп" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Да">Да</SelectItem>
-                              <SelectItem value="Нет">Нет</SelectItem>
+                              <SelectItem value="1">Да</SelectItem>
+                              <SelectItem value="0">Нет</SelectItem>
                             </SelectContent>
                           </Select>
 
@@ -574,8 +584,10 @@ const PatientForm = () => {
                           <FormLabel>Ишемия</FormLabel>
 
                           <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            onValueChange={(value) =>
+                              field.onChange(Boolean(Number(value)))
+                            }
+                            defaultValue={field.value ? "1" : "0"}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -583,11 +595,10 @@ const PatientForm = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="Да">Да</SelectItem>
-                              <SelectItem value="Нет">Нет</SelectItem>
+                              <SelectItem value="1">Да</SelectItem>
+                              <SelectItem value="0">Нет</SelectItem>
                             </SelectContent>
                           </Select>
-
                           <FormMessage />
                         </FormItem>
                       )}
@@ -680,7 +691,7 @@ const PatientForm = () => {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="Город">Город</SelectItem>
-                      <SelectItem value="Деревня">Деревня</SelectItem>
+                      <SelectItem value="Район">Район</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -739,17 +750,19 @@ const PatientForm = () => {
                   <FormLabel>Бп</FormLabel>
 
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    onValueChange={(value) =>
+                      field.onChange(Boolean(Number(value)))
+                    }
+                    defaultValue={field.value ? "1" : "0"}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="БП" />
+                        <SelectValue placeholder="Бп" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Да">Да</SelectItem>
-                      <SelectItem value="Нет">Нет</SelectItem>
+                      <SelectItem value="1">Да</SelectItem>
+                      <SelectItem value="0">Нет</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -762,23 +775,24 @@ const PatientForm = () => {
               name="dep"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Деп</FormLabel>
+                  <FormLabel>Дэп</FormLabel>
 
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    onValueChange={(value) =>
+                      field.onChange(Boolean(Number(value)))
+                    }
+                    defaultValue={field.value ? "1" : "0"}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Деп" />
+                        <SelectValue placeholder="Дэп" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Да">Да</SelectItem>
-                      <SelectItem value="Нет">Нет</SelectItem>
+                      <SelectItem value="1">Да</SelectItem>
+                      <SelectItem value="0">Нет</SelectItem>
                     </SelectContent>
                   </Select>
-
                   <FormMessage />
                 </FormItem>
               )}
@@ -791,8 +805,10 @@ const PatientForm = () => {
                   <FormLabel>Ишемия</FormLabel>
 
                   <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    onValueChange={(value) =>
+                      field.onChange(Boolean(Number(value)))
+                    }
+                    defaultValue={field.value ? "1" : "0"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -800,11 +816,10 @@ const PatientForm = () => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Да">Да</SelectItem>
-                      <SelectItem value="Нет">Нет</SelectItem>
+                      <SelectItem value="1">Да</SelectItem>
+                      <SelectItem value="0">Нет</SelectItem>
                     </SelectContent>
                   </Select>
-
                   <FormMessage />
                 </FormItem>
               )}
@@ -861,11 +876,16 @@ const PatientForm = () => {
               patientRecords.data?.data.map((record) => (
                 <Drawer>
                   <DrawerTrigger>
-                    <Button>{record.visit}</Button>
+                    <Button>
+                      {new Date(record.visit).toLocaleDateString("ru-Ru")}
+                    </Button>
                   </DrawerTrigger>
                   <DrawerContent>
                     <DrawerHeader>
-                      <DrawerTitle>Запись {record.visit}</DrawerTitle>
+                      <DrawerTitle>
+                        Запись{" "}
+                        {new Date(record.visit).toLocaleDateString("ru-Ru")}
+                      </DrawerTitle>
                       <DrawerDescription>
                         Можете изменить запись
                       </DrawerDescription>

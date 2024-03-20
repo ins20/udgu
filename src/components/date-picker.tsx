@@ -8,8 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useState } from "react";
-import { Input } from "./ui/input";
+
 
 export function DatePicker({
   placeholder,
@@ -18,41 +17,6 @@ export function DatePicker({
   placeholder: string;
   field: any;
 }) {
-  const [timeValue, setTimeValue] = useState<string>("00:00");
-  const handleTimeChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const time = e.target.value;
-    if (!field.value) {
-      setTimeValue(time);
-      return;
-    }
-    const [hours, minutes] = time.split(":").map((str) => parseInt(str, 10));
-    const newSelectedDate = new Date(
-      field.value.getFullYear(),
-      field.value.getMonth(),
-      field.value.getDate(),
-      hours,
-      minutes
-    );
-    field.onChange(newSelectedDate);
-    setTimeValue(time);
-  };
-  const handleDaySelect = (date: Date | undefined) => {
-    if (!timeValue || !date) {
-      field.onChange(date);
-      return;
-    }
-    const [hours, minutes] = timeValue
-      .split(":")
-      .map((str) => parseInt(str, 10));
-    const newDate = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      hours,
-      minutes
-    );
-    field.onChange(newDate);
-  };
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -64,7 +28,7 @@ export function DatePicker({
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {field.value ? (
-            new Date(field.value).toLocaleString("ru-Ru")
+            new Date(field.value).toLocaleDateString("ru-Ru")
           ) : (
             <span>{placeholder}</span>
           )}
@@ -74,11 +38,8 @@ export function DatePicker({
         <Calendar
           mode="single"
           selected={field.value}
-          onSelect={handleDaySelect}
+          onSelect={field.onChange}
           locale={ru}
-          footer={
-            <Input type="time" value={timeValue} onChange={handleTimeChange} />
-          }
         />
       </PopoverContent>
     </Popover>

@@ -14,7 +14,6 @@ import {
   ChevronsLeftIcon,
   ChevronsRightIcon,
 } from "lucide-react";
-import { Patient } from "@/types";
 
 interface DataTablePaginationProps<Patient> {
   table: Table<Patient>;
