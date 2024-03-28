@@ -86,12 +86,12 @@ const Users = () => {
   );
 
   return (
-    <div className="flex xl:flex-row flex-col gap-6 h-full">
-      <div className="xl:w-1/2 shadow-neumorphism dark:shadow p-6 rounded-2xl h-min">
+    <div className="flex xl:flex-row flex-col gap-6 h-full ">
+      <div className="xl:w-1/2 p-6 rounded-2xl h-min">
         <UserAddForm />
       </div>
 
-      <div className="xl:w-1/2 shadow-neumorphism dark:shadow xl:p-6 p-3 rounded-2xl h-full">
+      <div className="xl:w-1/2  xl:p-6 p-3 rounded-2xl h-full">
         <Table>
           <TableBody className="space-y-2 mt-2">
             {users.data?.data.map((user) => (

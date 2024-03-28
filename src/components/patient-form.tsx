@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import api from "@/axios";
 import { toast } from "./ui/use-toast";
 export const PatientForm = () => {
+  const queryClient = useQueryClient();
+
   const patient = useMutation(
     (values: z.infer<typeof formSchema>) => {
       return api.post("patient/create", values);
@@ -33,12 +35,11 @@ export const PatientForm = () => {
           title: "Успешно",
           description: "Пациент успешно создан",
         });
-        patients.invalidateQueries("patients");
+        queryClient.invalidateQueries("patients");
       },
       onError: () => {},
     }
   );
-  const patients = useQueryClient();
   const formSchema = z.object({
     full_name: z.string(),
     gender: z.union([z.literal("м"), z.literal("ж")]),

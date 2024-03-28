@@ -3,29 +3,26 @@ import { Patient, User } from "@/types";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   ColumnDef,
+  Row,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "react-query";
+import { useMemo, useRef, useState } from "react";
+import {  useQuery, useQueryClient } from "react-query";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { NotebookPenIcon, SearchIcon, XIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import DebouncedInput from "@/components/debounce-input";
 import { AxiosResponse } from "axios";
-import { DataTablePagination } from "@/components/data-table-pagination";
 import { PatientForm } from "../components/patient-form";
 import {
   Drawer,
@@ -36,43 +33,23 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { toast } from "@/components/ui/use-toast";
 import { ExportToExcel } from "@/components/excel-export";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+
+import { useVirtualizer } from "@tanstack/react-virtual";
 const columnHelper = createColumnHelper<Patient>();
 
 const Patients = () => {
   const navigate = useNavigate({ from: "/dashboard" });
   const user = useQueryClient().getQueryData<AxiosResponse<User>>("user");
-  if (user?.data.role !== "therapist") navigate({ to: "/dashboard/profile" });
-  const deletePatient = useMutation(
-    (patient_id: string) =>
-      api.delete(`patient/delete`, {
-        params: {
-          patient_id,
-        },
-      }),
-    {
-      onSuccess: () => {
-        patients.refetch();
-        toast({
-          title: "Успешно",
-          description: "Пациент был удален",
-        });
-        setGlobalFilter("");
+  const allPatients = useQuery<AxiosResponse<Patient[]>>("all_patients", () =>
+    api.get("patient/get_all", {
+      params: {
+        limit: 6000,
       },
-    }
+    })
   );
+  const [data, setData] = useState<Patient[]>([]);
+  if (user?.data.role !== "therapist") navigate({ to: "/dashboard/profile" });
 
   const columns = useMemo<ColumnDef<Patient, any>[]>(
     () => [
@@ -93,7 +70,7 @@ const Patients = () => {
         header: "Место жительства",
       }),
       columnHelper.accessor("job_title", {
-        header: "Должность",
+        header: "Положение",
       }),
       columnHelper.accessor("inhabited_locality", {
         header: "Населенный пункт",
@@ -110,58 +87,6 @@ const Patients = () => {
         header: "Дэп",
         cell: ({ row }) => (row.original.dep ? "Да" : "Нет"),
       }),
-      columnHelper.display({
-        id: "actions",
-        cell: ({ row }) => {
-          return (
-            <div className="space-x-2">
-              <Button
-                size="icon"
-                onClick={() =>
-                  row.original.id &&
-                  navigate({
-                    to: `/dashboard/$patientId`,
-                    params: {
-                      patientId: row.original.id,
-                    },
-                  })
-                }
-              >
-                <NotebookPenIcon />
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button size="icon">
-                    <XIcon />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Вы точно хотите удалить пациента?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Это действие невозможно отменить. Это приведет к
-                      необратимому удалению данных пациента и его записей.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Закрыть</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-red-500 hover:bg-red-600 shadow-none hover:shadow-none text-white hover:text-white"
-                      onClick={() =>
-                        deletePatient.mutate(String(row.original.id))
-                      }
-                    >
-                      Удалить
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          );
-        },
-      }),
     ],
     []
   );
@@ -175,16 +100,15 @@ const Patients = () => {
       }),
     {
       enabled: user?.data.role === "therapist",
+      onSuccess: (data) => {
+        setData(data.data);
+      },
     }
   );
-  const allPatients =
-    useQueryClient().getQueryData<AxiosResponse<Patient[]>>("all_patients");
 
   const [globalFilter, setGlobalFilter] = useState("");
   const table = useReactTable({
-    data: user?.data.is_superuser
-      ? allPatients?.data || []
-      : patients.data?.data || [],
+    data,
     columns,
     state: {
       globalFilter,
@@ -192,7 +116,23 @@ const Patients = () => {
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+  });
+  const { rows } = table.getRowModel();
+
+  //The virtualizer needs to know the scrollable container element
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    estimateSize: () => 33, //estimate row height for accurate scrollbar dragging
+    getScrollElement: () => tableContainerRef.current,
+    //measure dynamic row height, except in firefox because it measures table border height incorrectly
+    measureElement:
+      typeof window !== "undefined" &&
+      navigator.userAgent.indexOf("Firefox") === -1
+        ? (element) => element?.getBoundingClientRect().height
+        : undefined,
+    overscan: 5,
   });
   return (
     <div className="flex gap-6 justify-center flex-col xl:flex-row">
@@ -215,8 +155,8 @@ const Patients = () => {
         </Drawer>
       </div>
 
-      <div className="rounded-2xl xl:w-10/12 p-6 shadow-neumorphism-box dark:shadow">
-        <div className="flex gap-6">
+      <div className="rounded-2xl xl:w-10/12 p-6 shadow-neumorphism-box dark:shadow ">
+        <div className="flex gap-6 mb-2">
           <div className="relative">
             <DebouncedInput
               debounce={500}
@@ -236,68 +176,124 @@ const Patients = () => {
               .rows.map(({ original }) => original)}
             fileName="Пациенты"
           />
+          {user?.data.is_superuser && allPatients.data?.data && (
+            <Button onClick={() => setData(allPatients.data?.data)}>
+              Все пациенты
+            </Button>
+          )}
+          {user?.data.is_superuser && patients.data?.data && (
+            <Button onClick={() => setData(patients.data?.data)}>
+              Мои пациенты
+            </Button>
+          )}
         </div>
-        <DataTablePagination table={table} />
-        <Table className="xl:w-full w-max border-separate border-spacing-y-2">
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="p-2">
-                    {header.isPlaceholder ? null : (
-                      <>
-                        <div
-                          {...{
-                            className: header.column.getCanSort()
-                              ? "select-none flex items-center"
-                              : "",
-                          }}
-                        >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+
+        <div
+          ref={tableContainerRef}
+          style={{
+            overflow: "auto", //our scrollable table container
+            position: "relative", //needed for sticky header
+            height: "800px", //should be a fixed height
+          }}
+        >
+          {" "}
+          <table style={{ display: "grid" }}>
+            <thead
+              style={{
+                display: "grid",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+              }}
+              className="bg-[#EBEFF3] dark:bg-slate-900"
+            >
+              {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
-                  className="hover:scale-[0.98] transition duration-200 hover:bg-transparent"
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
+                  key={headerGroup.id}
+                  className="border-none"
+                  style={{ display: "flex", width: "100%" }}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="p-2 first:rounded-l-full first:border-l-8 last:rounded-r-full last:border-r-8"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className="p-2"
+                        style={{
+                          display: "flex",
+                          width: header.getSize(),
+                        }}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  Нет данных
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </thead>
+            <TableBody
+              style={{
+                display: "grid",
+                height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
+                position: "relative", //needed for absolute positioning of rows
+              }}
+            >
+              {table.getRowModel().rows?.length ? (
+                rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const row = rows[virtualRow.index] as Row<Patient>;
+                  return (
+                    <TableRow
+                      data-index={virtualRow.index} //needed for dynamic row height measurement
+                      ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                      key={row.id}
+                      onClick={() =>
+                        row.original.id &&
+                        navigate({
+                          to: `/dashboard/$patientId`,
+                          params: {
+                            patientId: row.original.id,
+                          },
+                        })
+                      }
+                      className="cursor-pointer"
+                      style={{
+                        display: "flex",
+                        position: "absolute",
+                        transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                        width: "100%",
+                      }}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            style={{
+                              display: "flex",
+                              width: cell.column.getSize(),
+                            }}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length}>Нет данных</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </table>
+        </div>
       </div>
       <div className="xl:block hidden p-6 shadow-neumorphism-box dark:shadow rounded-2xl">
         <PatientForm />

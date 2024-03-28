@@ -22,6 +22,7 @@ const Root = () => {
     },
     retry: 1,
     staleTime: 1000 * 60 * 60,
+
   });
   if (user.isLoading)
     return (

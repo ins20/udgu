@@ -37,6 +37,17 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { ExportToExcel } from "@/components/excel-export";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 const RecordForm = ({ defaultValues }: { defaultValues: PatientRecord }) => {
   const formSchema = z.object({
     visit: z.date().optional(),
@@ -366,6 +377,23 @@ const PatientForm = () => {
       onError: () => {},
     }
   );
+  const deletePatient = useMutation(
+    () =>
+      api.delete(`patient/delete`, {
+        params: {
+          patient_id,
+        },
+      }),
+
+    {
+      onSuccess: () => {
+        toast({
+          title: "Успешно",
+          description: "Пациент был удален",
+        });
+      },
+    }
+  );
   return (
     <div className="flex gap-6 xl:flex-row flex-col">
       <div className="block xl:hidden">
@@ -504,18 +532,14 @@ const PatientForm = () => {
                         <FormItem>
                           <FormLabel>Положение</FormLabel>
 
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <Input
-                                value={field.value}
-                                onChange={field.onChange}
-                                placeholder="Должность"
-                              />
-                            </FormControl>
-                          </Select>
+                          <FormControl>
+                            <Input
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Положение"
+                            />
+                          </FormControl>
+
                           <FormMessage />
                         </FormItem>
                       )}
@@ -612,6 +636,31 @@ const PatientForm = () => {
         </Drawer>
       </div>
       <div className="xl:block hidden space-y-2">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button className="w-full">Удалить</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Вы точно хотите удалить пациента?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Это действие невозможно отменить. Это приведет к необратимому
+                удалению данных пациента и его записей.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Закрыть</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-500 hover:bg-red-600 shadow-none hover:shadow-none text-white hover:text-white"
+                onClick={() => deletePatient.mutate()}
+              >
+                Удалить
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Form {...form}>
           <form
             className="space-y-2 p-6 w-full shadow-neumorphism-box dark:shadow-none rounded-2xl w-1/3"
@@ -725,18 +774,14 @@ const PatientForm = () => {
                 <FormItem>
                   <FormLabel>Положение</FormLabel>
 
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <Input
-                        value={String(field.value)}
-                        onChange={field.onChange}
-                        placeholder="Должность"
-                      />
-                    </FormControl>
-                  </Select>
+                  <FormControl>
+                    <Input
+                      value={String(field.value)}
+                      onChange={field.onChange}
+                      placeholder="Положение"
+                    />
+                  </FormControl>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -824,7 +869,7 @@ const PatientForm = () => {
                 </FormItem>
               )}
             />
-            <Button>Сохранить</Button>
+            <Button className="w-full">Сохранить</Button>
           </form>
         </Form>
       </div>

@@ -1,6 +1,5 @@
 import ConditionField from "@/components/condition-input";
 import DataTableColumnHeader from "@/components/data-table-column-header";
-import { DataTablePagination } from "@/components/data-table-pagination";
 import DebouncedInput from "@/components/debounce-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,9 +37,12 @@ import { FormFilterConfig, Patient } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute } from "@tanstack/react-router";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { useVirtualizer } from "@tanstack/react-virtual";
+
 import {
   ColumnDef,
   FilterFn,
+  Row,
   SortingState,
   flexRender,
   getCoreRowModel,
@@ -51,7 +53,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { AxiosResponse } from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useQueryClient } from "react-query";
 import { z } from "zod";
@@ -165,14 +167,6 @@ const columns: ColumnDef<Patient>[] = [
   },
 
   {
-    accessorKey: "job_title",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Положение" />
-    ),
-    cell: ({ row }) => row.original.job_title || "-",
-  },
-
-  {
     accessorKey: "bp",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="БП" />
@@ -192,6 +186,13 @@ const columns: ColumnDef<Patient>[] = [
       <DataTableColumnHeader column={column} title="ДЭП" />
     ),
     cell: ({ row }) => (row.original.dep ? "Да" : "Нет"),
+  },
+  {
+    accessorKey: "job_title",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Положение" />
+    ),
+    cell: ({ row }) => row.original.job_title || "-",
   },
 ];
 const FilterTypeSchema = z.object({
@@ -220,7 +221,6 @@ const Statistics = () => {
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFilteredRowModel: getFilteredRowModel(),
     globalFilterFn: multiFilter,
@@ -228,7 +228,23 @@ const Statistics = () => {
       sorting,
     },
   });
+  const { rows } = table.getRowModel();
 
+  //The virtualizer needs to know the scrollable container element
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    estimateSize: () => 33, //estimate row height for accurate scrollbar dragging
+    getScrollElement: () => tableContainerRef.current,
+    //measure dynamic row height, except in firefox because it measures table border height incorrectly
+    measureElement:
+      typeof window !== "undefined" &&
+      navigator.userAgent.indexOf("Firefox") === -1
+        ? (element) => element?.getBoundingClientRect().height
+        : undefined,
+    overscan: 5,
+  });
   useEffect(() => {
     const subscriptionConfig = filterConfig.watch(({ filter }) => {
       table.setGlobalFilter({
@@ -525,58 +541,98 @@ const Statistics = () => {
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
-        <DataTablePagination table={table} />
 
         <div className="shadow-neumorphism-box dark:shadow p-6 rounded-2xl">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="border-none">
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id} className="p-2">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
+          <div
+            ref={tableContainerRef}
+            style={{
+              overflow: "auto", //our scrollable table container
+              position: "relative", //needed for sticky header
+              height: "600px", //should be a fixed height
+            }}
+          >
+            {" "}
+            <table style={{ display: "grid" }}>
+              <thead
+                style={{
+                  display: "grid",
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 1,
+                }}
+                className="bg-[#EBEFF3] dark:bg-slate-800"
+              >
+                {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="border-none "
+                    key={headerGroup.id}
+                    className="border-none"
+                    style={{ display: "flex", width: "100%" }}
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="p-2">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className="p-2"
+                          style={{
+                            display: "flex",
+                            width: header.getSize(),
+                          }}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      );
+                    })}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    Нет данных
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                ))}
+              </thead>
+              <TableBody
+                style={{
+                  display: "grid",
+                  height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
+                  position: "relative", //needed for absolute positioning of rows
+                }}
+              >
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const row = rows[virtualRow.index] as Row<Patient>;
+                  return (
+                    <TableRow
+                      data-index={virtualRow.index} //needed for dynamic row height measurement
+                      ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                      key={row.id}
+                      style={{
+                        display: "flex",
+                        position: "absolute",
+                        transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                        width: "100%",
+                      }}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            style={{
+                              display: "flex",
+                              width: cell.column.getSize(),
+                            }}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </table>
+          </div>
         </div>
       </div>
 
